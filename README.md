@@ -65,11 +65,3 @@ SmartLock Elite is a hybrid smart lock ecosystem designed for low-connectivity e
 3. Flash the device.
 
 ---
-
-## 🛡️ **Security Disclaimer**
-This repository uses AES-128 for local secret protection. To ensure absolute security, change the hardcoded AES key in both `hybrid.ino` and `tools/encrypt_esp_secrets.py` before production deployment.
-
----
-
-## 📜 **License**
-This project is open-source for final-year project reference and educational purposes.
