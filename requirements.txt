@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+google-auth
+google-cloud-firestore
+passlib[bcrypt]
+pyotp
+qrcode[pil]
+python-multipart
+pandas
+openpyxl
+python-dotenv
+cryptography
