@@ -1,0 +1,58 @@
+# Environment variables
+.env
+
+# Firebase
+.firebase/
+firebase.json
+.firebaserc
+service_account.json
+
+# Logs & Exported Data
+*.log
+*.csv
+server.log
+
+#Frontend
+frontend/logo.ico
+frontend/404.html
+    
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.toast
+.ipynb_checkpoints
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# IDE & Editor Folders
+.vscode/
+.idea/
+.gemini/
+*.swp
+*.swo
+
+# OS Specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project Specific
+scratch/
+get_secrets.py
+
+# ESP32 specific (temporary files or specific builds)
+# Add specific .ino files here if they shouldn't be tracked
+esp scripts/*
+
+# Office temporary files
+*.docx

@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from app.auth_google import verify_google_token
 from app.auth_password import verify_admin_password, verify_manager_login
-from app.auth_otp import verify_user_otp, get_or_create_otp_secret, generate_qr_code
+from app.auth_otp import verify_user_otp, get_otp_secret, generate_qr_code
 from app.audit_logs import log_event, get_auth_logs
 from app.export_logs import generate_logs_excel, generate_logs_csv
 from app.notifier import send_security_alert
@@ -54,7 +54,8 @@ def send_esp_command(cmd: str, username: str):
     try:
         if ESP_URL:
             requests.post(ESP_URL, json=data, timeout=3)
-    except Exception:
+    except Exception as e:
+        print(f"ESP Connection Error: {e}")
         # ESP offline should NOT block auth
         pass
 
@@ -86,7 +87,7 @@ async def startup_event():
 @app.get("/", response_class=HTMLResponse)
 def serve_ui():
     # Use utf-8 encoding to support special characters in login.html
-    with open("frontend/login.html", encoding="utf-8") as f:
+    with open("frontend/index.html", encoding="utf-8") as f:
         return f.read()
 
 
@@ -102,12 +103,35 @@ async def verify_token_endpoint(authorization: str = Header(None)):
     return {
         "email": user["email"],
         "sub": user["sub"],
-        "role": user.get("role")
+        "role": user.get("role"),
+        "exists": user.get("exists", False),
+        "otp_enabled": user.get("otp_enabled", False)
     }
 
 # ==============================
 # ADMIN PASSWORD LOGIN
 # ==============================
+@app.post("/register-user")
+async def register_user(authorization: str = Header(None), data: dict = None):
+    user = verify_google_token(authorization)
+    if user.get("exists"):
+        raise HTTPException(400, "User already exists")
+    
+    from app.security import hash_password
+    p_hash = hash_password(data["password"])
+    username = user["email"].split("@")[0]
+    db.collection("users").document(user["sub"]).set({
+        "email": user["email"],
+        "username": username,
+        "app_password_hash": p_hash,
+        "role": "user",
+        "otp_enabled": False,
+        "created_by_admin": True,
+        "created_at": int(time.time())
+    })
+    
+    return {"status": "registered", "username": username}
+
 @app.post("/username-login")
 async def username_login(authorization: str = Header(None), data: dict = None):
     user = verify_google_token(authorization)
@@ -173,10 +197,9 @@ async def login_manager_endpoint(data: dict = None):
 @app.get("/setup-otp")
 def setup_otp(authorization: str = Header(None)):
     user = verify_google_token(authorization)
-
-    secret = get_or_create_otp_secret(user["sub"])
+    # Use auto_create=True only here
+    secret = get_otp_secret(user["sub"], auto_create=True, email=user["email"])
     qr_b64 = generate_qr_code(user["email"], secret)
-
     return {"qr_code": qr_b64}
 
 

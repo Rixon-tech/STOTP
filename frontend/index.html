@@ -789,7 +789,18 @@
             fetch("/verify-token", { method: "POST", headers: { Authorization: "Bearer " + state.token } })
                 .then(r => r.json()).then(data => {
                     state.email = data.email;
+                    state.exists = data.exists;
                     localStorage.setItem("auth_email", data.email);
+                    
+                    if (!state.exists) {
+                        document.querySelector('#step-password h2')?.innerText || (document.querySelector('#step-password').insertAdjacentHTML('afterbegin', '<h2 id="step-pass-title" style="font-size: 1.25rem; font-family: Outfit; margin-bottom: 10px;">Setup Account</h2>'));
+                        document.getElementById('step-pass-title').innerText = "Account Registration";
+                        document.getElementById('btn-password').innerText = "REGISTER & CONTINUE";
+                    } else {
+                        const title = document.getElementById('step-pass-title');
+                        if (title) title.innerText = "Identity Verification";
+                        document.getElementById('btn-password').innerText = "CONTINUE";
+                    }
                     renderAuthStep(1);
                 });
         }
@@ -832,15 +843,27 @@
             if (state.isProcessing) return;
             const p = document.getElementById('sys_password').value;
             state.isProcessing = true;
-            setLoading('btn-password', true, 'CONTINUE');
+            const btnId = 'btn-password';
+            const originalText = document.getElementById(btnId).innerText;
+            setLoading(btnId, true, originalText);
+            
+            const endpoint = state.exists ? "/username-login" : "/register-user";
+            
             try {
-                const r = await fetch("/username-login", { method: "POST", headers: { Authorization: "Bearer " + state.token, "Content-Type": "application/json" }, body: JSON.stringify({ password: p }) });
+                const r = await fetch(endpoint, { 
+                    method: "POST", 
+                    headers: { Authorization: "Bearer " + state.token, "Content-Type": "application/json" }, 
+                    body: JSON.stringify({ password: p }) 
+                });
                 const data = await r.json();
                 if (r.ok) {
-                    state.role = data.role;
-                    localStorage.setItem("auth_role", data.role);
+                    if (!state.exists) {
+                        state.exists = true; // Now exists after registration
+                    }
+                    state.role = data.role || state.role;
+                    localStorage.setItem("auth_role", state.role);
                     await checkOTPSettings(data);
-                    if (data.otp_required) {
+                    if (data.otp_required !== false) {
                         renderAuthStep(2);
                     } else {
                         renderAuthStep(3);
@@ -850,19 +873,19 @@
             } catch (e) {
                 alert("Server error. Please try again.");
             } finally {
-                setLoading('btn-password', false, 'CONTINUE');
+                setLoading(btnId, false, originalText);
                 state.isProcessing = false;
             }
         }
 
         async function checkOTPSettings(data) {
             const qrBox = document.getElementById('otp-qr-box');
+            // Show QR if MFA is not yet enabled. 
             if (!data.otp_enabled) {
                 const r = await fetch("/setup-otp", { headers: { Authorization: "Bearer " + state.token } });
                 const qd = await r.json();
                 qrBox.innerHTML = `<img src="data:image/png;base64,${qd.qr_code}" style="width:140px; margin: 0 auto; display: block;"><p style="font-size:10px; color:var(--text-muted); margin-top:10px;">SCAN TO ENROLL</p>`;
                 qrBox.classList.remove('hidden');
-                document.getElementById('otp-hint').innerText = "First Enrollment Required";
             } else { qrBox.classList.add('hidden'); }
         }
 

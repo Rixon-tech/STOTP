@@ -42,8 +42,12 @@ def verify_google_token(authorization: str):
         doc = db.collection("users").document(user_data["sub"]).get()
         if doc.exists:
             user_data["role"] = doc.to_dict().get("role", "user")
+            user_data["exists"] = True
+            user_data["otp_enabled"] = doc.to_dict().get("otp_enabled", False)
         else:
             user_data["role"] = "user"
+            user_data["exists"] = False
+            user_data["otp_enabled"] = False
 
         return user_data
     except Exception:
