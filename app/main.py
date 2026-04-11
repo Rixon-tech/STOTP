@@ -26,6 +26,19 @@ ESP_URL = os.getenv('ESP_URL')
 
 app = FastAPI()
 
+# ==============================
+# CORS CONFIGURATION
+# ==============================
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # In production, replace with your Firebase URL like: ["https://stotp-xxxx.web.app"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Mount frontend directory to serve images/assets
 app.mount("/assets", StaticFiles(directory="frontend"), name="assets")
 

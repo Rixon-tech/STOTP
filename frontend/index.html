@@ -652,6 +652,8 @@
             isProcessing: false // NEW FLAG
         };
 
+        const API_BASE_URL = "https://stotp.onrender.com";
+
         const contents = {
             home: { title: "Welcome", desc: "The world's most secure authentication gateway. Protecting enterprise secrets with multi-factor biometric and cryptographic keys." },
             about: {
@@ -689,7 +691,7 @@
             if (state.token) {
                 // Check token validity silently
                 try {
-                    const r = await fetch("/verify-token", { method: "POST", headers: { Authorization: "Bearer " + state.token } });
+                    const r = await fetch(`${API_BASE_URL}/verify-token`, { method: "POST", headers: { Authorization: "Bearer " + state.token } });
                     if (r.ok) {
                         const data = await r.json();
                         state.email = data.email;
@@ -786,7 +788,7 @@
         function handleGoogle(resp) {
             state.token = resp.credential;
             localStorage.setItem("auth_token", state.token);
-            fetch("/verify-token", { method: "POST", headers: { Authorization: "Bearer " + state.token } })
+            fetch(`${API_BASE_URL}/verify-token`, { method: "POST", headers: { Authorization: "Bearer " + state.token } })
                 .then(r => r.json()).then(data => {
                     state.email = data.email;
                     state.exists = data.exists;
@@ -813,7 +815,7 @@
             state.isProcessing = true;
             setLoading('btn-manager-login', true, 'LOGIN');
             try {
-                const r = await fetch("/login-manager", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: e, password: p }) });
+                const r = await fetch(`${API_BASE_URL}/login-manager`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: e, password: p }) });
                 const data = await r.json();
                 if (r.ok) {
                     state.token = data.token;
@@ -847,7 +849,7 @@
             const originalText = document.getElementById(btnId).innerText;
             setLoading(btnId, true, originalText);
             
-            const endpoint = state.exists ? "/username-login" : "/register-user";
+            const endpoint = state.exists ? `${API_BASE_URL}/username-login` : `${API_BASE_URL}/register-user`;
             
             try {
                 const r = await fetch(endpoint, { 
@@ -882,7 +884,7 @@
             const qrBox = document.getElementById('otp-qr-box');
             // Show QR if MFA is not yet enabled. 
             if (!data.otp_enabled) {
-                const r = await fetch("/setup-otp", { headers: { Authorization: "Bearer " + state.token } });
+                const r = await fetch(`${API_BASE_URL}/setup-otp`, { headers: { Authorization: "Bearer " + state.token } });
                 const qd = await r.json();
                 qrBox.innerHTML = `<img src="data:image/png;base64,${qd.qr_code}" style="width:140px; margin: 0 auto; display: block;"><p style="font-size:10px; color:var(--text-muted); margin-top:10px;">SCAN TO ENROLL</p>`;
                 qrBox.classList.remove('hidden');
@@ -895,7 +897,7 @@
             state.isProcessing = true;
             setLoading('btn-otp', true, 'VERIFY');
             try {
-                const r = await fetch("/verify-otp", { method: "POST", headers: { Authorization: "Bearer " + state.token, "Content-Type": "application/json" }, body: JSON.stringify({ otp: o }) });
+                const r = await fetch(`${API_BASE_URL}/verify-otp`, { method: "POST", headers: { Authorization: "Bearer " + state.token, "Content-Type": "application/json" }, body: JSON.stringify({ otp: o }) });
                 if (r.ok) {
                     renderAuthStep(3);
                     updateUserInterface();
@@ -917,7 +919,7 @@
         async function fetchLogsForDrawer() {
             if (!state.token || state.auth_step !== 3) return;
             try {
-                const r = await fetch("/user-logs", { headers: { Authorization: "Bearer " + state.token } });
+                const r = await fetch(`${API_BASE_URL}/user-logs`, { headers: { Authorization: "Bearer " + state.token } });
                 const data = await r.json();
                 const list = document.getElementById('logListContent');
                 list.innerHTML = data.logs.length ? '' : '<p style="text-align:center; padding-top:40px; color:var(--text-muted);">No activity found.</p>';
@@ -937,7 +939,7 @@
         }
 
         function downloadFullLogs() {
-            fetch("/download-logs", { headers: { Authorization: "Bearer " + state.token } })
+            fetch(`${API_BASE_URL}/download-logs`, { headers: { Authorization: "Bearer " + state.token } })
                 .then(r => r.blob()).then(blob => {
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -947,7 +949,7 @@
         }
 
         function logout(reset = true) {
-            fetch("/logout", { method: "POST", headers: { Authorization: "Bearer " + state.token } });
+            fetch(`${API_BASE_URL}/logout`, { method: "POST", headers: { Authorization: "Bearer " + state.token } });
             localStorage.clear();
             location.reload();
         }
