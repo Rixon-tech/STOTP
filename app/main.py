@@ -60,17 +60,19 @@ def send_esp_command(cmd: str, username: str):
         "cmd": cmd,
         "user": username,
         "ts": ts,
-        "sig": sig
+        "sig": sig,
+        "processed": False,
+        "server_ts": time.time()
     }
-    print('ESP Command: ', data)
+    print(f"Pushing command to Firestore: {cmd} for {username}")
     
     try:
-        if ESP_URL:
-            requests.post(ESP_URL, json=data, timeout=3)
+        # Use the global 'db' from firestore_db
+        db.collection("esp_commands").document("latest").set(data)
     except Exception as e:
-        print(f"ESP Connection Error: {e}")
-        # ESP offline should NOT block auth
+        print(f"Firestore Push Error: {e}")
         pass
+
 
 # ==============================
 # HEARTBEAT TASK

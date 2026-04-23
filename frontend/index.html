@@ -467,6 +467,102 @@
             width: 90%;
         }
     </style>
+    <style>
+        /* --- Responsive Design --- */
+        @media (max-width: 1024px) {
+            .hero-title {
+                font-size: 4.5rem;
+            }
+
+            .auth-right h1 {
+                font-size: 3.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: 20px 30px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            /* Hide navigation links on mobile */
+            .logo span {
+                font-size: 1rem;
+            }
+
+            main {
+                padding: 80px 20px 20px 20px;
+            }
+
+            .hero-title {
+                font-size: 3rem;
+                margin-top: 20px;
+            }
+
+            .hero-desc {
+                font-size: 1rem;
+                padding: 20px;
+                margin-bottom: 30px;
+            }
+
+            .auth-split {
+                flex-direction: column;
+            }
+
+            .auth-left {
+                flex: none;
+                width: 100%;
+                padding: 60px 20px;
+            }
+
+            .auth-right {
+                display: none;
+            }
+
+            /* Focus on the form for mobile */
+
+            .drawer {
+                width: 100%;
+                right: -100%;
+                padding: 60px 20px 20px 20px;
+            }
+
+            .drawer.open {
+                right: 0;
+            }
+
+            .info-card {
+                padding: 25px;
+                border-radius: 20px;
+            }
+
+            .hero-desc {
+                max-height: 350px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .btn-entry {
+                padding: 8px 20px;
+                font-size: 0.7rem;
+            }
+
+            .form-area {
+                max-width: 100%;
+            }
+
+            .tab {
+                font-size: 0.65rem;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -493,7 +589,8 @@
     <main>
         <!-- Home View -->
         <section id="view-home">
-            <h1 class="hero-title" id="heroTitle">Welcome <i data-lucide="shield-check" style="width: 70px; height: 70px;"></i></h1>
+            <h1 class="hero-title" id="heroTitle">Welcome <i data-lucide="shield-check"
+                    style="width: 70px; height: 70px;"></i></h1>
             <p class="hero-desc" id="heroDesc">The world's most secure authentication gateway. Protecting enterprise
                 secrets with multi-factor biometric and cryptographic keys.</p>
             <div style="display: flex; gap: 20px; justify-content: center;">
@@ -607,7 +704,8 @@
                     </div>
                 </div>
                 <div class="auth-right">
-                    <h1 style="font-family: Outfit; font-size: 5rem; font-weight: 700;">Welcome <i data-lucide="shield-check" style="width: 60px; height: 60px;"></i></h1>
+                    <h1 style="font-family: Outfit; font-size: 5rem; font-weight: 700;">Welcome <i
+                            data-lucide="shield-check" style="width: 60px; height: 60px;"></i></h1>
                     <p style="max-width: 420px; font-size: 0.875rem; opacity: 0.8; line-height: 1.6; margin-top: 10px;">
                         Your secure environmental control dashboard is ready. Authenticate to manage hardware resources
                         and audit security protocols.</p>
@@ -652,7 +750,9 @@
             isProcessing: false // NEW FLAG
         };
 
-        const API_BASE_URL = "https://stotp.onrender.com";
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? "http://localhost:8000"
+            : "https://stotp.onrender.com";
 
         const contents = {
             home: { title: "Welcome", desc: "The world's most secure authentication gateway. Protecting enterprise secrets with multi-factor biometric and cryptographic keys." },
@@ -793,7 +893,7 @@
                     state.email = data.email;
                     state.exists = data.exists;
                     localStorage.setItem("auth_email", data.email);
-                    
+
                     if (!state.exists) {
                         document.querySelector('#step-password h2')?.innerText || (document.querySelector('#step-password').insertAdjacentHTML('afterbegin', '<h2 id="step-pass-title" style="font-size: 1.25rem; font-family: Outfit; margin-bottom: 10px;">Setup Account</h2>'));
                         document.getElementById('step-pass-title').innerText = "Account Registration";
@@ -848,14 +948,14 @@
             const btnId = 'btn-password';
             const originalText = document.getElementById(btnId).innerText;
             setLoading(btnId, true, originalText);
-            
+
             const endpoint = state.exists ? `${API_BASE_URL}/username-login` : `${API_BASE_URL}/register-user`;
-            
+
             try {
-                const r = await fetch(endpoint, { 
-                    method: "POST", 
-                    headers: { Authorization: "Bearer " + state.token, "Content-Type": "application/json" }, 
-                    body: JSON.stringify({ password: p }) 
+                const r = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { Authorization: "Bearer " + state.token, "Content-Type": "application/json" },
+                    body: JSON.stringify({ password: p })
                 });
                 const data = await r.json();
                 if (r.ok) {
