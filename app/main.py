@@ -64,7 +64,14 @@ def send_esp_command(cmd: str, username: str):
         "processed": False,
         "server_ts": time.time()
     }
-    print(f"Pushing command to Firestore: {cmd} for {username}")
+    print("\n" + "="*40)
+    print(f"[CLOUD COMMAND SENT]")
+    print("-" * 40)
+    print(f"COMMAND:   {cmd}")
+    print(f"USER:      {username}")
+    print(f"TIMESTAMP: {ts}")
+    print(f"SIGNATURE: {sig}")
+    print("="*40 + "\n")
     
     try:
         # Use the global 'db' from firestore_db

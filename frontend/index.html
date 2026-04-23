@@ -747,8 +747,28 @@
             role: localStorage.getItem("auth_role") || "user",
             auth_step: parseInt(localStorage.getItem("auth_step") || "0"),
             tab: localStorage.getItem("auth_tab") || 'user',
-            isProcessing: false // NEW FLAG
+            isProcessing: false,
+            inactivityTimer: null
         };
+
+        const INACTIVITY_TIMEOUT_MS = 20000; // 20 Seconds
+
+        function resetInactivityTimer() {
+            if (state.inactivityTimer) clearTimeout(state.inactivityTimer);
+            
+            // Only active during Step 1 (Password) or Step 2 (OTP)
+            if (state.view === 'auth' && (state.auth_step === 1 || state.auth_step === 2)) {
+                state.inactivityTimer = setTimeout(() => {
+                    console.log("Inactivity Timeout: Resetting session");
+                    logout(false);
+                }, INACTIVITY_TIMEOUT_MS);
+            }
+        }
+
+        // Global listeners to detect activity
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
+            window.addEventListener(evt, resetInactivityTimer, true);
+        });
 
         const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? "http://localhost:8000"
@@ -883,6 +903,7 @@
             state.auth_step = s;
             localStorage.setItem("auth_step", s);
             lucide.createIcons();
+            resetInactivityTimer(); // Start/Reset timer on step change
         }
 
         function handleGoogle(resp) {
@@ -1049,6 +1070,7 @@
         }
 
         function logout(reset = true) {
+            if (state.inactivityTimer) clearTimeout(state.inactivityTimer);
             fetch(`${API_BASE_URL}/logout`, { method: "POST", headers: { Authorization: "Bearer " + state.token } });
             localStorage.clear();
             location.reload();
